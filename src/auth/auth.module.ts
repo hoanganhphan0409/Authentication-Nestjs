@@ -2,9 +2,13 @@ import { Module } from "@nestjs/common";
 import { UserService } from "src/user/user.service";
 import { AuthService } from "./auth.service";
 import { AuthController } from "./auth.controller";
+import { JwtModule } from "@nestjs/jwt";
 import { UserModule } from "src/user/user.module";
-@Module ({
-    imports:[UserModule],
+import { APP_GUARD } from "@nestjs/core";
+import { AuthGuard } from "./auth.guard";
+import { ConfigModule } from "@nestjs/config";
+@Module({
+    imports: [JwtModule.register({ global: true, secret: "hoanganh" }),UserModule],
     controllers: [AuthController],
-    providers: [AuthService,UserService]
-}) export class AuthModule{}
+    providers: [AuthService]
+}) export class AuthModule { }
