@@ -5,7 +5,4 @@ export class UseLoginrDto{
     name : string;
     @IsNotEmpty()
     password : string;
-    // @IsNotEmpty()
-    // @IsEmail()
-    // email: string;
 }
