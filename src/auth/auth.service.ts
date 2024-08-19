@@ -11,16 +11,18 @@ export class AuthService {
         private userService: UserService
     ) { }
     async register(user: UserDto) {
-        if (this.userService.findUserByName(user.name))
+        if (this.userService.findUserByName(user.name) != null){
+            console.log(this.userService.findUserByName(user.name)==null);
             console.log("user already exsited");
+        }
         else {
             user.password = await bcrypt.hash(user.password,10);
-            this.userService.registerUser(user);
+            await this.userService.registerUser(user);
             console.log("register successful");
         }
     }
     async login(user: UseLoginrDto): Promise<{ token: string }> {
-        const userLogin = this.userService.findUserByName(user.name);
+        const userLogin = await this.userService.findUserByName(user.name);
         if (userLogin) {
             const isMatch = await bcrypt.compare(user.password, userLogin.password);
             if (isMatch) {
