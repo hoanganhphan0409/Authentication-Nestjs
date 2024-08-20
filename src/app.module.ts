@@ -6,6 +6,7 @@ import { AuthModule } from './auth/auth.module';
 import { TypeOrmModule } from "@nestjs/typeorm"
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { User } from './typeorm/entity/User';
+import { Token } from './typeorm/entity/Token';
 @Module({
   imports: [ConfigModule.forRoot({isGlobal : true}),TypeOrmModule
     .forRootAsync({imports:[ConfigModule],inject:[ConfigService],useFactory:(configService: ConfigService)=>({
@@ -15,7 +16,7 @@ import { User } from './typeorm/entity/User';
       username: configService.get<string>("DATABASE_USER_NAME"),
       password: configService.get<string>("DATABASE_PASSWORD"),
       database: configService.get<string>("DATABASE_NAME"),
-      entities: [User],
+      entities: [User, Token],
       synchronize: true
     })}),UserModule, AuthModule],
   controllers: [AppController],

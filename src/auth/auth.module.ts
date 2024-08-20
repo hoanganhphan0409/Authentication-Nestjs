@@ -7,6 +7,8 @@ import { UserModule } from "src/user/user.module";
 import { APP_GUARD } from "@nestjs/core";
 import { AuthGuard } from "./auth.guard";
 import { ConfigModule, ConfigService } from "@nestjs/config";
+import { TypeOrmModule } from "@nestjs/typeorm";
+import { User } from "src/typeorm/entity/User";
 @Module({
     imports: [ConfigModule.forRoot(),JwtModule.registerAsync({
         imports: [ConfigModule],
@@ -14,7 +16,7 @@ import { ConfigModule, ConfigService } from "@nestjs/config";
         useFactory: async (configService: ConfigService) => ({
           secret: configService.get<string>('SECRET_KEY')
         }),
-      }),UserModule],
+      }),UserModule,TypeOrmModule.forFeature([User])],
     controllers: [AuthController],
     providers: [AuthService,ConfigService]
 }) export class AuthModule { }
