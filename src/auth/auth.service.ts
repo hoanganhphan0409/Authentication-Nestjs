@@ -6,12 +6,17 @@ import { UserService } from "src/user/user.service";
 import * as bcrypt from "bcrypt";
 import { User } from "src/typeorm/entity/User";
 import { UserUpdateDto } from "src/user/dto/userUpdate.dto";
+import { InjectRepository } from "@nestjs/typeorm";
+import { Repository } from "typeorm";
+import { Token } from "src/typeorm/entity/Token";
 
 @Injectable()
 export class AuthService {
     constructor(
         private jwtService: JwtService,
-        private userService: UserService
+        private userService: UserService,
+        @InjectRepository(Token)
+        private tokenRepo: Repository<Token>
     ) { }
     async register(user: UserDto) {
         if (await this.userService.findUserByName(user.name) == null) {
@@ -25,7 +30,7 @@ export class AuthService {
     }
     async update(user: UserUpdateDto) {
         if (await this.userService.findUserByName(user.name) == null) {
-            throw new NotFoundException('User not found');
+            throw new NotFoundException('User not found');                                
         }
         else {
             if (user.password != undefined)
@@ -39,7 +44,9 @@ export class AuthService {
         if (userLogin) {
             const isMatch = await bcrypt.compare(user.password, userLogin.password);
             if (isMatch) {
-                const payload = { username: user.name }
+                const payload = { username: user.name };
+                const accessToken = await this.jwtService.signAsync(payload);
+                await this.addToken(user.name, accessToken);
                 return {
                     token: await this.jwtService.signAsync(payload)
                 }
@@ -51,4 +58,8 @@ export class AuthService {
     async getInforByName(userName: string): Promise<User> {
         return this.userService.findUserByName(userName);
     }
+    async addToken(userName:string, token: string) {
+        const newToken = this.tokenRepo.create({ name: userName, token: token });
+        return this.tokenRepo.save(newToken);
+     }
 }
