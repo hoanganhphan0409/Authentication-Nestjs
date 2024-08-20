@@ -1,9 +1,11 @@
-import { Injectable } from "@nestjs/common";
+import { ConflictException, Injectable, NotFoundException, UnauthorizedException } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
 import { UserDto } from "src/user/dto/user.dto";
 import { UseLoginrDto } from "src/user/dto/userLogin.dto";
 import { UserService } from "src/user/user.service";
 import * as bcrypt from "bcrypt";
+import { User } from "src/typeorm/entity/User";
+
 @Injectable()
 export class AuthService {
     constructor(
@@ -11,14 +13,13 @@ export class AuthService {
         private userService: UserService
     ) { }
     async register(user: UserDto) {
-        if (this.userService.findUserByName(user.name) != null){
-            console.log(this.userService.findUserByName(user.name)==null);
-            console.log("user already exsited");
+        if (await this.userService.findUserByName(user.name) != null){
+            throw new ConflictException("This username already exists.")
         }
         else {
             user.password = await bcrypt.hash(user.password,10);
             await this.userService.registerUser(user);
-            console.log("register successful");
+            return {status: 'success',message: "User registered successfully."}
         }
     }
     async login(user: UseLoginrDto): Promise<{ token: string }> {
@@ -26,17 +27,16 @@ export class AuthService {
         if (userLogin) {
             const isMatch = await bcrypt.compare(user.password, userLogin.password);
             if (isMatch) {
-                console.log("login successful");
                 const payload = { username: user.name }
                 return {
                     token: await this.jwtService.signAsync(payload)
                 }
             }
-            else console.log("password does not match");
+            else throw new UnauthorizedException('Password does not match.');
         }
-        else console.log("user does not existed");
+        else throw new NotFoundException('User not found');
     }
-    getInforByName(userName: string) {
+    async getInforByName(userName: string): Promise<User> {
         return this.userService.findUserByName(userName);
     }
 }
