@@ -10,11 +10,11 @@ import { User } from './typeorm/entity/User';
   imports: [ConfigModule.forRoot({isGlobal : true}),TypeOrmModule
     .forRootAsync({imports:[ConfigModule],inject:[ConfigService],useFactory:(configService: ConfigService)=>({
       type:"mysql",
-      host:"localhost",
-      port: 3306,
-      username:"root",
-      password:"hoanganh123",
-      database:"mapx",
+      host:configService.get<string>("DATABASE_HOST"),
+      port: configService.get<number>("DATABASE_HOST"),
+      username: configService.get<string>("DATABASE_USER_NAME"),
+      password: configService.get<string>("DATABASE_PASSWORD"),
+      database: configService.get<string>("DATABASE_NAME"),
       entities: [User],
       synchronize: true
     })}),UserModule, AuthModule],

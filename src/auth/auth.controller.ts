@@ -8,16 +8,17 @@ import { AuthGuard } from "./auth.guard";
 export class AuthController{
     constructor(private authService : AuthService){}
     @Post('register')
-    registerUser(@Body() user: UserDto){
-        this.authService.register(user);
+    async registerUser(@Body() user: UserDto){
+        return this.authService.register(user);
     }
     @Post('login')
-    login(@Body() user : UseLoginrDto){
+    async login(@Body() user : UseLoginrDto){
         return this.authService.login(user);
     }
     @UseGuards(AuthGuard)
     @Get("infor")
-    getInforUser(@Request() req){        
-        return this.authService.getInforByName(req.user.username); 
+    async getInforUser(@Request() req){
+        const user = await this.authService.getInforByName(req.user.username);
+        return {name: user.name, email: user.email, age: user.age, role: user.role };
     }
 }
