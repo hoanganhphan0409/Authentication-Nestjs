@@ -10,8 +10,6 @@ export class AuthController{
     constructor(private authService : AuthService){}
     @Post('register')
     async registerUser(@Body() user: UserDto){
-        console.log("wtf");
-        
         return this.authService.register(user);
     }
     @Post('login')
