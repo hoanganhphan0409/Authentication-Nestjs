@@ -19,7 +19,7 @@ export class AuthService {
         private tokenRepo: Repository<Token>
     ) { }
     async register(user: UserDto) {
-        if (await this.userService.findUserByName(user.name) == null) {
+        if (await this.userService.findUserByName(user.name)) {
             throw new ConflictException("This username already exists.")
         }
         else {
@@ -48,12 +48,18 @@ export class AuthService {
                 const accessToken = await this.jwtService.signAsync(payload);
                 await this.addToken(user.name, accessToken);
                 return {
-                    token: await this.jwtService.signAsync(payload)
+                    token: accessToken
                 }
             }
             else throw new UnauthorizedException('Password does not match.');
         }
         else throw new NotFoundException('User not found');
+    }
+    async logout(userName: string){
+        if (userName == "") throw new ConflictException("User name is empty");
+        const user = await this.tokenRepo.findOne({where:{name : userName}});
+        this.tokenRepo.remove(user);
+        return { status: 'success', message: "Logout successfully." }
     }
     async getInforByName(userName: string): Promise<User> {
         return this.userService.findUserByName(userName);
