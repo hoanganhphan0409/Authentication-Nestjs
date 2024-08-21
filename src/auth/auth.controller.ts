@@ -10,6 +10,8 @@ export class AuthController{
     constructor(private authService : AuthService){}
     @Post('register')
     async registerUser(@Body() user: UserDto){
+        console.log("wtf");
+        
         return this.authService.register(user);
     }
     @Post('login')
@@ -20,11 +22,16 @@ export class AuthController{
     @Get("infor")
     async getInforUser(@Request() req){
         const user = await this.authService.getInforByName(req.user.username);
-        return {name: user.name, email: user.email, age: user.age, role: user.role };
+        const {password,id, ...remain} = user
+        return remain
     }
     @UseGuards(AuthGuard)
     @Patch("update")
     async updateUser(@Body() user: UserUpdateDto){
         return this.authService.update(user)
+    }
+    @Post('logout')
+    async logout(@Body() user){
+        return this.authService.logout(user.name);
     }
 }
