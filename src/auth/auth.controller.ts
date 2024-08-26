@@ -29,7 +29,8 @@ export class AuthController{
         return this.authService.update(user)
     }
     @Post('logout')
-    async logout(@Body() user){
-        return this.authService.logout(user.name);
+    @UseGuards(AuthGuard)
+    async logout(@Headers() headers){
+        return this.authService.logout(headers.authorization?.split(' ')[1]);
     }
 }
