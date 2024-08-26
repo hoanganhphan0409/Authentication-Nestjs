@@ -4,6 +4,7 @@ import { UserDto } from "src/user/dto/user.dto";
 import { UseLoginDto } from "src/user/dto/userLogin.dto";
 import { AuthGuard } from "./auth.guard";
 import { UserUpdateDto } from "src/user/dto/userUpdate.dto";
+import { AuthGuardRefresh } from "./auth.guard.refresh";
 
 @Controller('auth')
 export class AuthController{
@@ -32,5 +33,10 @@ export class AuthController{
     @UseGuards(AuthGuard)
     async logout(@Headers() headers){
         return this.authService.logout(headers.authorization?.split(' ')[1]);
+    }
+    @Post("refresh")
+    @UseGuards(AuthGuardRefresh)
+    async refreshToken(@Headers() headers, @Request() req){
+        return this.authService.refreshToken(req.user.username);
     }
 }
