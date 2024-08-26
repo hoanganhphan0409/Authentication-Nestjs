@@ -6,7 +6,7 @@ import { JwtService } from "@nestjs/jwt";
 import { Cache } from "cache-manager";
 
 @Injectable()
-export class AuthGuard implements CanActivate {
+export class AuthGuardRefresh implements CanActivate {
     constructor(private jwtService: JwtService,
         private configService: ConfigService,
         @Inject(CACHE_MANAGER)
@@ -18,7 +18,7 @@ export class AuthGuard implements CanActivate {
         const accessToken = this.extractTokenFromHeader(request);
         try {
             const payload = await this.jwtService.verifyAsync(accessToken, {
-                secret: this.configService.get<string>('ACCESS_TOKEN_SECRET_KEY')
+                secret: this.configService.get<string>('REFRESH_TOKEN_SECRET_KEY')
             });            
             if (await this.cacheService.get(accessToken) == "blacklisted" )
                 throw new UnauthorizedException();

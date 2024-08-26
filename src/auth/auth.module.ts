@@ -6,15 +6,11 @@ import { UserModule } from "src/user/user.module";
 import { ConfigModule, ConfigService } from "@nestjs/config";
 import { CacheModule } from "@nestjs/cache-manager";
 @Module({
-  imports: [ConfigModule.forRoot(), JwtModule.registerAsync({
-    imports: [ConfigModule],
-    inject: [ConfigService],
-    useFactory: async (configService: ConfigService) => ({
-      secret: configService.get<string>('SECRET_KEY')
-    }),
-  }),
+  imports: [
+    ConfigModule.forRoot(),
+    JwtModule,
     UserModule,
-  CacheModule.register()],
+    CacheModule.register()],
   controllers: [AuthController],
   providers: [AuthService, ConfigService]
 }) export class AuthModule { }
