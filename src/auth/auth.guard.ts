@@ -1,17 +1,16 @@
-import { ExecutionContext, Injectable, UnauthorizedException } from "@nestjs/common";
+import { CACHE_MANAGER } from "@nestjs/cache-manager";
+import { ExecutionContext, Inject, Injectable, UnauthorizedException } from "@nestjs/common";
 import { CanActivate } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { JwtService } from "@nestjs/jwt";
-import { InjectRepository } from "@nestjs/typeorm";
-import { Token } from "src/typeorm/entity/Token";
-import { Repository } from "typeorm";
+import { Cache } from "cache-manager";
 
 @Injectable()
 export class AuthGuard implements CanActivate {
     constructor(private jwtService: JwtService,
         private configService: ConfigService,
-        @InjectRepository(Token)
-        private tokenRepo: Repository<Token>
+        @Inject(CACHE_MANAGER)
+        private readonly cacheService: Cache
     ) { };
     async canActivate(context: ExecutionContext): Promise<boolean> //| Promise<boolean> | Observable<boolean> 
     {
@@ -20,10 +19,10 @@ export class AuthGuard implements CanActivate {
         try {
             const payload = await this.jwtService.verifyAsync(accessToken, {
                 secret: this.configService.get<string>('SERECT_KEY')
-            });
-            if (!this.tokenRepo.findOne({ where: { name: payload.name, token: accessToken } }))
+            });            
+            if (await this.cacheService.get(accessToken) == "blacklisted" )
                 throw new UnauthorizedException();
-                request['user'] = payload;
+            request['user'] = payload;
         } catch {
             throw new UnauthorizedException();
         }

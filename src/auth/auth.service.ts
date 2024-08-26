@@ -1,4 +1,4 @@
-import { ConflictException, Injectable, NotFoundException, UnauthorizedException } from "@nestjs/common";
+import { ConflictException, Inject, Injectable, NotFoundException, UnauthorizedException } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
 import { UserDto } from "src/user/dto/user.dto";
 import { UseLoginDto } from "src/user/dto/userLogin.dto";
@@ -6,17 +6,17 @@ import { UserService } from "src/user/user.service";
 import * as bcrypt from "bcrypt";
 import { User } from "src/typeorm/entity/User";
 import { UserUpdateDto } from "src/user/dto/userUpdate.dto";
-import { InjectRepository } from "@nestjs/typeorm";
-import { Repository } from "typeorm";
-import { Token } from "src/typeorm/entity/Token";
+import { CACHE_MANAGER } from "@nestjs/cache-manager";
+import { Cache } from "cache-manager";
 
 @Injectable()
 export class AuthService {
     constructor(
         private jwtService: JwtService,
         private userService: UserService,
-        @InjectRepository(Token)
-        private tokenRepo: Repository<Token>
+
+        @Inject(CACHE_MANAGER)
+        private readonly cacheService: Cache
     ) { }
     async register(user: UserDto) {
         if (await this.userService.findUserByName(user.name)) {
@@ -30,7 +30,7 @@ export class AuthService {
     }
     async update(user: UserUpdateDto) {
         if (await this.userService.findUserByName(user.name) == null) {
-            throw new NotFoundException('User not found');                                
+            throw new NotFoundException('User not found');
         }
         else {
             if (user.password != undefined)
@@ -46,7 +46,6 @@ export class AuthService {
             if (isMatch) {
                 const payload = { username: user.name };
                 const accessToken = await this.jwtService.signAsync(payload);
-                await this.addToken(user.name, accessToken);
                 return {
                     token: accessToken
                 }
@@ -55,17 +54,16 @@ export class AuthService {
         }
         else throw new NotFoundException('User not found');
     }
-    async logout(userName: string){
-        if (userName == "") throw new ConflictException("User name is empty");
-        const user = await this.tokenRepo.findOne({where:{name : userName}});
-        this.tokenRepo.remove(user);
+    async logout(token: string) {
+        try {
+            await this.cacheService.set(token, "blacklisted", 100000);
+        }
+        catch (error) {
+            throw new Error('Logout failed');
+        }
         return { status: 'success', message: "Logout successfully." }
     }
     async getInforByName(userName: string): Promise<User> {
         return this.userService.findUserByName(userName);
     }
-    async addToken(userName:string, token: string) {
-        const newToken = this.tokenRepo.create({ name: userName, token: token });
-        return this.tokenRepo.save(newToken);
-     }
 }
