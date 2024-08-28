@@ -23,8 +23,11 @@ export class AuthService {
         if (await this.userService.findUserByName(user.name)) {
             throw new ConflictException("This username already exists.")
         }
+        else if (await this.userService.findUserByEmail(user.email)) {
+            throw new ConflictException("This email already exists.")
+        }
         else {
-            user.password = await bcrypt.hash(user.password, this.configService.get<string>('SALT_OR_ROUND'));
+            user.password = await bcrypt.hash(user.password,10);
             await this.userService.registerUser(user);
             return { status: 'success', message: "User registered successfully." }
         }
@@ -35,13 +38,14 @@ export class AuthService {
         }
         else {
             if (user.password != undefined)
-                user.password = await bcrypt.hash(user.password, this.configService.get<string>('SALT_OR_ROUND'));
+                user.password = await bcrypt.hash(user.password, 10);
             await this.userService.updateUser(user);
             return { status: 'success', message: "User updated successfully." }
         }
     }
     async login(user: UseLoginDto): Promise<{ access_token: string, refresh_token: string }> {
-        const userLogin = await this.userService.findUserByName(user.name);
+        const userLogin = user.name != undefined?
+            await this.userService.findUserByName(user.name) : await this.userService.findUserByEmail(user.email) ;
         if (userLogin) {
             const isMatch = await bcrypt.compare(user.password, userLogin.password);
             if (isMatch) {
@@ -57,7 +61,7 @@ export class AuthService {
             payload,
             {
                 secret: this.configService.get<string>('ACCESS_TOKEN_SECRET_KEY'),
-                expiresIn: '30m',
+                expiresIn: '15m',
             },
         );
 
@@ -75,7 +79,7 @@ export class AuthService {
     }
     async logout(token: string) {
         try {
-            await this.cacheService.set(token, "blacklisted", 100000);
+            await this.cacheService.set(token, "blacklisted", 50000);
         }
         catch (error) {
             throw new Error('Logout failed');

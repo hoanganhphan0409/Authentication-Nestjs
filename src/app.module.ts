@@ -16,7 +16,7 @@ import * as redisStore from 'cache-manager-redis-store';
       useFactory: (configService: ConfigService) => ({
         type: "mysql",
         host: configService.get<string>("DATABASE_HOST"),
-        port: configService.get<number>("DATABASE_HOST"),
+        port: configService.get<number>("DATABASE_PORT"),
         username: configService.get<string>("DATABASE_USER_NAME"),
         password: configService.get<string>("DATABASE_PASSWORD"),
         database: configService.get<string>("DATABASE_NAME"),
@@ -32,7 +32,7 @@ import * as redisStore from 'cache-manager-redis-store';
         isGlobal: true,
         store: redisStore,
         host: configService.get<string>("REDIS_HOST"),
-        port: configService.get<number>("REDIS_HOST"),
+        port: configService.get<number>("REDIS_PORT"),
         username: configService.get<string>("REDIS_USER_NAME"),
         password: configService.get<string>("REDIS_PASSWORD"),
       })
